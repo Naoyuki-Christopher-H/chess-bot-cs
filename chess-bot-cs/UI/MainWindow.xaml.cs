@@ -31,7 +31,6 @@ namespace chess_bot_cs.UI
             UpdateGameInfo();
             MoveHistoryList.Items.Clear();
 
-            // If player is black, let bot make first move
             if (!playerIsWhite)
             {
                 MakeBotMove();
@@ -41,12 +40,11 @@ namespace chess_bot_cs.UI
         public void HandleSquareClick(int file, int rank)
         {
             if (game.State != GameState.InProgress) return;
-            if (game.Board.WhiteToMove != playerIsWhite) return; // Not player's turn
+            if (game.Board.WhiteToMove != playerIsWhite) return;
 
             var position = new Position(file, rank);
             var piece = game.Board.GetPieceAt(position);
 
-            // If no square is selected and clicked square has player's piece
             if (selectedSquare == null)
             {
                 if (piece != null && piece.IsWhite == playerIsWhite)
@@ -58,7 +56,6 @@ namespace chess_bot_cs.UI
                 return;
             }
 
-            // If clicking on already selected square, deselect it
             if (selectedSquare.File == file && selectedSquare.Rank == rank)
             {
                 selectedSquare = null;
@@ -66,7 +63,6 @@ namespace chess_bot_cs.UI
                 return;
             }
 
-            // If clicking on another of player's pieces, select that instead
             if (piece != null && piece.IsWhite == playerIsWhite)
             {
                 selectedSquare = position;
@@ -76,22 +72,12 @@ namespace chess_bot_cs.UI
                 return;
             }
 
-            // Try to make move
             var move = new Move(selectedSquare, position);
             var movingPiece = game.Board.GetPieceAt(selectedSquare);
 
-            // Handle pawn promotion
             if (movingPiece?.Type == PieceType.Pawn && (rank == 0 || rank == 7))
             {
-                var promotionDialog = new PromotionDialog(playerIsWhite);
-                if (promotionDialog.ShowDialog() == true)
-                {
-                    move.Promotion = promotionDialog.SelectedPiece;
-                }
-                else
-                {
-                    return; // User canceled promotion
-                }
+                move.Promotion = PieceType.Queen; // Default to queen promotion
             }
 
             if (game.MakeMove(move))
@@ -113,18 +99,16 @@ namespace chess_bot_cs.UI
         private void MakeBotMove()
         {
             if (game.State != GameState.InProgress) return;
-            if (game.Board.WhiteToMove == playerIsWhite) return; // Not bot's turn
+            if (game.Board.WhiteToMove == playerIsWhite) return;
 
             int difficulty = DifficultyCombo.SelectedIndex;
-            var move = bot.DecideBestMove(game, difficulty + 1); // +1 to make easy=1, medium=2, hard=3
+            var move = bot.DecideBestMove(game, difficulty + 1);
 
             if (move != null)
             {
-                // Handle pawn promotion for bot (always promote to queen)
                 var movingPiece = game.Board.GetPieceAt(move.From);
                 if (movingPiece?.Type == PieceType.Pawn &&
-                    (move.To.Rank == 0 || move.To.Rank == 7) &&
-                    move.Promotion == PieceType.None)
+                    (move.To.Rank == 0 || move.To.Rank == 7))
                 {
                     move.Promotion = PieceType.Queen;
                 }
@@ -141,7 +125,6 @@ namespace chess_bot_cs.UI
                 UpdateGameInfo();
                 AddMoveToHistory(move);
 
-                // If it's the bot's turn, make a move
                 if (game.State == GameState.InProgress && game.Board.WhiteToMove != playerIsWhite)
                 {
                     MakeBotMove();
@@ -188,22 +171,20 @@ namespace chess_bot_cs.UI
             string moveText = move.ToString();
             string moveNumber = (game.MoveHistory.Count / 2 + 1).ToString();
 
-            if (game.Board.WhiteToMove) // Last move was black's
+            if (game.Board.WhiteToMove)
             {
                 if (MoveHistoryList.Items.Count % 2 == 1)
                 {
-                    // Add black move to existing white move
                     int lastIndex = MoveHistoryList.Items.Count - 1;
                     string existing = MoveHistoryList.Items[lastIndex].ToString();
                     MoveHistoryList.Items[lastIndex] = $"{existing} {moveText}";
                 }
                 else
                 {
-                    // Shouldn't happen as white moves first
                     MoveHistoryList.Items.Add($"{moveNumber}. {moveText}");
                 }
             }
-            else // Last move was white's
+            else
             {
                 MoveHistoryList.Items.Add($"{moveNumber}. {moveText}");
             }
@@ -219,7 +200,6 @@ namespace chess_bot_cs.UI
 
         private void UndoMoveBtn_Click(object sender, RoutedEventArgs e)
         {
-            // Simple undo implementation - just restart the game
             InitializeGame();
         }
 
