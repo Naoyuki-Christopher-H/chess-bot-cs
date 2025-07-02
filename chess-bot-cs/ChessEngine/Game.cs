@@ -5,33 +5,38 @@ namespace chess_bot_cs.ChessEngine
 {
     public class Game
     {
-        public Board Board { get; private set; }
+        private Board _board;
+        public Board Board
+        {
+            get => _board;
+            internal set => _board = value; // Changed to internal setter
+        }
+
         public RulesValidator Validator { get; private set; }
         public List<Move> MoveHistory { get; private set; }
         public GameState State { get; private set; }
 
-        public event Action<Move>? OnMoveMade;
-        public event Action<GameState>? OnGameStateChanged;
+        public event Action<Move> OnMoveMade;
+        public event Action<GameState> OnGameStateChanged;
 
         public Game()
         {
-            Board = new Board();
-            Board.InitializeStandardSetup();
-            Validator = new RulesValidator(Board);
+            _board = new Board();
+            _board.InitializeStandardSetup();
+            Validator = new RulesValidator(_board);
             MoveHistory = new List<Move>();
             State = GameState.InProgress;
-            OnMoveMade = null;
-            OnGameStateChanged = null;
+            OnMoveMade = delegate { };
+            OnGameStateChanged = delegate { };
         }
 
         public bool MakeMove(Move move)
         {
             if (State != GameState.InProgress) return false;
-            if (move == null) return false;
 
             if (Validator.IsMoveLegal(move))
             {
-                Board.MakeMove(move);
+                _board.MakeMove(move);
                 MoveHistory.Add(move);
 
                 OnMoveMade?.Invoke(move);
@@ -46,12 +51,12 @@ namespace chess_bot_cs.ChessEngine
 
         private void UpdateGameState()
         {
-            if (Validator.IsCheckmate(Board.WhiteToMove))
+            if (Validator.IsCheckmate(_board.WhiteToMove))
             {
-                State = Board.WhiteToMove ? GameState.BlackWon : GameState.WhiteWon;
+                State = _board.WhiteToMove ? GameState.BlackWon : GameState.WhiteWon;
                 OnGameStateChanged?.Invoke(State);
             }
-            else if (Validator.IsStalemate(Board.WhiteToMove))
+            else if (Validator.IsStalemate(_board.WhiteToMove))
             {
                 State = GameState.Draw;
                 OnGameStateChanged?.Invoke(State);
@@ -66,14 +71,14 @@ namespace chess_bot_cs.ChessEngine
         public List<Move> GetAllLegalMoves()
         {
             var allMoves = new List<Move>();
-            bool isWhite = Board.WhiteToMove;
+            bool isWhite = _board.WhiteToMove;
 
             for (int file = 0; file < 8; file++)
             {
                 for (int rank = 0; rank < 8; rank++)
                 {
                     var pos = new Position(file, rank);
-                    var piece = Board.GetPieceAt(pos);
+                    var piece = _board.GetPieceAt(pos);
 
                     if (piece != null && piece.IsWhite == isWhite)
                     {

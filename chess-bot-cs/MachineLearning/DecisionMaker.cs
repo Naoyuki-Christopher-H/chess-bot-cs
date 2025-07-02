@@ -4,16 +4,12 @@ namespace chess_bot_cs.MachineLearning
 {
     public class DecisionMaker
     {
-        private readonly MoveEvaluator evaluator;
+        private readonly MoveEvaluator evaluator = new MoveEvaluator();
 
-        public DecisionMaker()
+        public Move? DecideBestMove(Game game, int difficultyLevel)
         {
-            evaluator = new MoveEvaluator();
-        }
+            if (game == null) return null;
 
-        public Move DecideBestMove(Game game, int difficultyLevel)
-        {
-            // Higher difficulty level means deeper search
             int depth = 2 + difficultyLevel;
             return evaluator.SelectBestMove(game, depth);
         }

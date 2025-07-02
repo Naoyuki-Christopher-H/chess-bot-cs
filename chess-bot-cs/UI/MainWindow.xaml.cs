@@ -1,17 +1,16 @@
-﻿using System;
+﻿using chess_bot_cs.ChessEngine;
+using chess_bot_cs.MachineLearning;
 using System.Windows;
 using System.Windows.Controls;
-using chess_bot_cs.ChessEngine;
-using chess_bot_cs.MachineLearning;
 
 namespace chess_bot_cs.UI
 {
     public partial class MainWindow : Window
     {
-        private Game game;
-        private DecisionMaker bot;
+        private Game? game;
+        private DecisionMaker? bot;
         private bool playerIsWhite = true;
-        private Position selectedSquare = null;
+        private Position? selectedSquare = null;
 
         public MainWindow()
         {
@@ -39,7 +38,7 @@ namespace chess_bot_cs.UI
 
         public void HandleSquareClick(int file, int rank)
         {
-            if (game.State != GameState.InProgress) return;
+            if (game == null || game.State != GameState.InProgress) return;
             if (game.Board.WhiteToMove != playerIsWhite) return;
 
             var position = new Position(file, rank);
@@ -77,7 +76,7 @@ namespace chess_bot_cs.UI
 
             if (movingPiece?.Type == PieceType.Pawn && (rank == 0 || rank == 7))
             {
-                move.Promotion = PieceType.Queen; // Default to queen promotion
+                move.Promotion = PieceType.Queen;
             }
 
             if (game.MakeMove(move))
@@ -89,6 +88,8 @@ namespace chess_bot_cs.UI
 
         private void HighlightLegalMoves(int file, int rank)
         {
+            if (game == null) return;
+
             var legalMoves = game.GetLegalMoves(new Position(file, rank));
             foreach (var move in legalMoves)
             {
@@ -98,6 +99,7 @@ namespace chess_bot_cs.UI
 
         private void MakeBotMove()
         {
+            if (game == null || bot == null) return;
             if (game.State != GameState.InProgress) return;
             if (game.Board.WhiteToMove == playerIsWhite) return;
 
@@ -121,6 +123,8 @@ namespace chess_bot_cs.UI
         {
             Dispatcher.Invoke(() =>
             {
+                if (game == null) return;
+
                 ChessBoard.UpdateBoard(game.Board);
                 UpdateGameInfo();
                 AddMoveToHistory(move);
@@ -147,6 +151,8 @@ namespace chess_bot_cs.UI
 
         private void UpdateGameInfo()
         {
+            if (game == null) return;
+
             TurnText.Text = game.Board.WhiteToMove ? "White's turn" : "Black's turn";
 
             switch (game.State)
@@ -168,6 +174,8 @@ namespace chess_bot_cs.UI
 
         private void AddMoveToHistory(Move move)
         {
+            if (game == null) return;
+
             string moveText = move.ToString();
             string moveNumber = (game.MoveHistory.Count / 2 + 1).ToString();
 
@@ -176,7 +184,7 @@ namespace chess_bot_cs.UI
                 if (MoveHistoryList.Items.Count % 2 == 1)
                 {
                     int lastIndex = MoveHistoryList.Items.Count - 1;
-                    string existing = MoveHistoryList.Items[lastIndex].ToString();
+                    string existing = MoveHistoryList.Items[lastIndex].ToString() ?? "";
                     MoveHistoryList.Items[lastIndex] = $"{existing} {moveText}";
                 }
                 else

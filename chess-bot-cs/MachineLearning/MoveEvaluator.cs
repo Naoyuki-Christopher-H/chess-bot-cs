@@ -69,7 +69,6 @@ namespace chess_bot_cs.MachineLearning
 
         private int EvaluateBoard(Board board)
         {
-            // Simplified evaluation - count material
             int score = 0;
             for (int file = 0; file < 8; file++)
             {
