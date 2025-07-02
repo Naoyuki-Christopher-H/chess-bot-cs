@@ -87,6 +87,23 @@ namespace chess_bot_cs.UI
             }
         }
 
+        public void HighlightSquare(int file, int rank, bool highlight)
+        {
+            squares[file, rank].Stroke = highlight ? Brushes.Red : Brushes.Black;
+            squares[file, rank].StrokeThickness = highlight ? 3 : 0.5;
+        }
+
+        public void ClearHighlights()
+        {
+            for (int file = 0; file < BoardSize; file++)
+            {
+                for (int rank = 0; rank < BoardSize; rank++)
+                {
+                    HighlightSquare(file, rank, false);
+                }
+            }
+        }
+
         private void Square_MouseDown(int file, int rank)
         {
             // Handle square selection and moves

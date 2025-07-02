@@ -1,6 +1,7 @@
-﻿using chess_bot_cs.ChessEngine;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using chess_bot_cs.ChessEngine;
 
 namespace chess_bot_cs.MachineLearning
 {
@@ -56,7 +57,6 @@ namespace chess_bot_cs.MachineLearning
             {
                 return piece.IsWhite ? pawnPositionScores[rank, file] : pawnPositionScores[7 - rank, file];
             }
-            // Add position tables for other pieces
             return 0;
         }
 
@@ -68,8 +68,8 @@ namespace chess_bot_cs.MachineLearning
             var scoredMoves = legalMoves.Select(move =>
             {
                 // Simulate the move
-                var originalBoard = game.Board.Squares.Clone() as Piece[,];
-                game.Board.MakeMove(move);
+                var originalBoard = (Piece[,])game.Board.Squares.Clone();
+                game.MakeMove(move);
 
                 // Evaluate the position
                 int score = -EvaluatePosition(game, depth - 1, int.MinValue, int.MaxValue, !game.Board.WhiteToMove);
@@ -81,7 +81,6 @@ namespace chess_bot_cs.MachineLearning
                 return new { Move = move, Score = score };
             }).ToList();
 
-            // Return the move with the highest score
             return scoredMoves.OrderByDescending(x => x.Score).First().Move;
         }
 
@@ -100,8 +99,8 @@ namespace chess_bot_cs.MachineLearning
                 foreach (var move in legalMoves)
                 {
                     // Simulate the move
-                    var originalBoard = game.Board.Squares.Clone() as Piece[,];
-                    game.Board.MakeMove(move);
+                    var originalBoard = (Piece[,])game.Board.Squares.Clone();
+                    game.MakeMove(move);
 
                     int eval = EvaluatePosition(game, depth - 1, alpha, beta, false);
 
@@ -122,8 +121,8 @@ namespace chess_bot_cs.MachineLearning
                 foreach (var move in legalMoves)
                 {
                     // Simulate the move
-                    var originalBoard = game.Board.Squares.Clone() as Piece[,];
-                    game.Board.MakeMove(move);
+                    var originalBoard = (Piece[,])game.Board.Squares.Clone();
+                    game.MakeMove(move);
 
                     int eval = EvaluatePosition(game, depth - 1, alpha, beta, true);
 

@@ -1,11 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace chess_bot_cs.ChessEngine
 {
     public class Board
     {
-        public Piece[,] Squares { get; private set; }
+        private Piece[,] squares;
+        public Piece[,] Squares
+        {
+            get => squares;
+            internal set => squares = value; // Changed to internal setter
+        }
+
         public bool WhiteToMove { get; set; }
         public int HalfMoveClock { get; set; }
         public int FullMoveNumber { get; set; }
@@ -14,7 +19,7 @@ namespace chess_bot_cs.ChessEngine
 
         public Board()
         {
-            Squares = new Piece[8, 8];
+            squares = new Piece[8, 8];
             WhiteToMove = true;
             HalfMoveClock = 0;
             FullMoveNumber = 1;
@@ -27,92 +32,117 @@ namespace chess_bot_cs.ChessEngine
             // Place pawns
             for (int file = 0; file < 8; file++)
             {
-                Squares[file, 1] = new Piece(PieceType.Pawn, false);
-                Squares[file, 6] = new Piece(PieceType.Pawn, true);
+                squares[file, 1] = new Piece(PieceType.Pawn, false);
+                squares[file, 6] = new Piece(PieceType.Pawn, true);
             }
 
             // Place rooks
-            Squares[0, 0] = new Piece(PieceType.Rook, false);
-            Squares[7, 0] = new Piece(PieceType.Rook, false);
-            Squares[0, 7] = new Piece(PieceType.Rook, true);
-            Squares[7, 7] = new Piece(PieceType.Rook, true);
+            squares[0, 0] = new Piece(PieceType.Rook, false);
+            squares[7, 0] = new Piece(PieceType.Rook, false);
+            squares[0, 7] = new Piece(PieceType.Rook, true);
+            squares[7, 7] = new Piece(PieceType.Rook, true);
 
             // Place knights
-            Squares[1, 0] = new Piece(PieceType.Knight, false);
-            Squares[6, 0] = new Piece(PieceType.Knight, false);
-            Squares[1, 7] = new Piece(PieceType.Knight, true);
-            Squares[6, 7] = new Piece(PieceType.Knight, true);
+            squares[1, 0] = new Piece(PieceType.Knight, false);
+            squares[6, 0] = new Piece(PieceType.Knight, false);
+            squares[1, 7] = new Piece(PieceType.Knight, true);
+            squares[6, 7] = new Piece(PieceType.Knight, true);
 
             // Place bishops
-            Squares[2, 0] = new Piece(PieceType.Bishop, false);
-            Squares[5, 0] = new Piece(PieceType.Bishop, false);
-            Squares[2, 7] = new Piece(PieceType.Bishop, true);
-            Squares[5, 7] = new Piece(PieceType.Bishop, true);
+            squares[2, 0] = new Piece(PieceType.Bishop, false);
+            squares[5, 0] = new Piece(PieceType.Bishop, false);
+            squares[2, 7] = new Piece(PieceType.Bishop, true);
+            squares[5, 7] = new Piece(PieceType.Bishop, true);
 
             // Place queens
-            Squares[3, 0] = new Piece(PieceType.Queen, false);
-            Squares[3, 7] = new Piece(PieceType.Queen, true);
+            squares[3, 0] = new Piece(PieceType.Queen, false);
+            squares[3, 7] = new Piece(PieceType.Queen, true);
 
             // Place kings
-            Squares[4, 0] = new Piece(PieceType.King, false);
-            Squares[4, 7] = new Piece(PieceType.King, true);
+            squares[4, 0] = new Piece(PieceType.King, false);
+            squares[4, 7] = new Piece(PieceType.King, true);
         }
 
         public Piece GetPieceAt(Position position)
         {
-            if (position.File < 0 || position.File > 7 || position.Rank < 0 || position.Rank > 7)
+            if (position == null || position.File < 0 || position.File > 7 || position.Rank < 0 || position.Rank > 7)
                 return null;
 
-            return Squares[position.File, position.Rank];
+            return squares[position.File, position.Rank];
         }
 
         public void MakeMove(Move move)
         {
-            // Handle move logic including special moves like castling, en passant, promotion
+            if (move == null || move.From == null || move.To == null)
+                return;
+
             var piece = GetPieceAt(move.From);
-            Squares[move.From.File, move.From.Rank] = null;
-            Squares[move.To.File, move.To.Rank] = piece;
+            if (piece == null)
+                return;
+
+            // Handle capture
+            move.CapturedPiece = GetPieceAt(move.To);
+
+            // Move the piece
+            squares[move.From.File, move.From.Rank] = null;
+            squares[move.To.File, move.To.Rank] = piece;
 
             // Handle special cases
-            if (piece.Type == PieceType.Pawn && Math.Abs(move.To.Rank - move.From.Rank) == 2)
+            if (piece.Type == PieceType.Pawn)
             {
-                EnPassantTarget = new Position(move.From.File, (move.From.Rank + move.To.Rank) / 2);
+                // Reset half-move clock on pawn moves
+                HalfMoveClock = 0;
+
+                // Handle en passant
+                if (Math.Abs(move.To.Rank - move.From.Rank) == 2)
+                {
+                    EnPassantTarget = new Position(move.From.File, (move.From.Rank + move.To.Rank) / 2);
+                }
+                else if (move.To.Equals(EnPassantTarget))
+                {
+                    // Capture the en passant pawn
+                    int capturedPawnRank = piece.IsWhite ? move.To.Rank + 1 : move.To.Rank - 1;
+                    squares[move.To.File, capturedPawnRank] = null;
+                    move.CapturedPiece = new Piece(PieceType.Pawn, !piece.IsWhite);
+                }
+
+                // Handle promotion
+                if ((move.To.Rank == 0 || move.To.Rank == 7) && move.Promotion != PieceType.None)
+                {
+                    squares[move.To.File, move.To.Rank] = new Piece(move.Promotion, piece.IsWhite);
+                }
             }
             else
             {
-                EnPassantTarget = null;
+                // Increment half-move clock for non-pawn moves
+                if (move.CapturedPiece == null)
+                {
+                    HalfMoveClock++;
+                }
+                else
+                {
+                    HalfMoveClock = 0;
+                }
             }
 
             // Handle castling
             if (piece.Type == PieceType.King && Math.Abs(move.To.File - move.From.File) == 2)
             {
-                // Castle move - move the rook
-                int rookFile = move.To.File > move.From.File ? 7 : 0;
-                int newRookFile = move.To.File > move.From.File ? 5 : 3;
-                var rook = GetPieceAt(new Position(rookFile, move.From.Rank));
-                Squares[rookFile, move.From.Rank] = null;
-                Squares[newRookFile, move.From.Rank] = rook;
-            }
+                // Determine rook positions
+                int rookFromFile = move.To.File > move.From.File ? 7 : 0;
+                int rookToFile = move.To.File > move.From.File ? 5 : 3;
+                int rank = piece.IsWhite ? 0 : 7;
 
-            // Handle promotion
-            if (move.Promotion != PieceType.None)
-            {
-                Squares[move.To.File, move.To.Rank] = new Piece(move.Promotion, piece.IsWhite);
+                // Move the rook
+                var rook = squares[rookFromFile, rank];
+                squares[rookFromFile, rank] = null;
+                squares[rookToFile, rank] = rook;
             }
 
             // Update castling rights if king or rook moves
             UpdateCastlingRights(move, piece);
 
-            // Update move counters
-            if (piece.Type == PieceType.Pawn || move.CapturedPiece != null)
-            {
-                HalfMoveClock = 0;
-            }
-            else
-            {
-                HalfMoveClock++;
-            }
-
+            // Update full move number after black's move
             if (!WhiteToMove)
             {
                 FullMoveNumber++;
@@ -155,10 +185,72 @@ namespace chess_bot_cs.ChessEngine
 
         public string GetFenString()
         {
-            // Implementation to generate FEN string
-            // This would create a string representing the current board state
-            // according to Forsyth-Edwards Notation
-            return "";
+            string fen = "";
+
+            // Piece placement
+            for (int rank = 0; rank < 8; rank++)
+            {
+                int emptyCount = 0;
+
+                for (int file = 0; file < 8; file++)
+                {
+                    var piece = squares[file, rank];
+                    if (piece == null)
+                    {
+                        emptyCount++;
+                    }
+                    else
+                    {
+                        if (emptyCount > 0)
+                        {
+                            fen += emptyCount;
+                            emptyCount = 0;
+                        }
+                        fen += piece.ToString();
+                    }
+                }
+
+                if (emptyCount > 0)
+                {
+                    fen += emptyCount;
+                }
+
+                if (rank < 7)
+                {
+                    fen += "/";
+                }
+            }
+
+            // Side to move
+            fen += " " + (WhiteToMove ? "w" : "b");
+
+            // Castling availability
+            fen += " " + (string.IsNullOrEmpty(CastlingRights) ? "-" : CastlingRights);
+
+            // En passant
+            fen += " " + (EnPassantTarget?.ToString() ?? "-");
+
+            // Halfmove clock
+            fen += " " + HalfMoveClock;
+
+            // Fullmove number
+            fen += " " + FullMoveNumber;
+
+            return fen;
+        }
+
+        public Board Clone()
+        {
+            var clone = new Board
+            {
+                squares = (Piece[,])squares.Clone(),
+                WhiteToMove = WhiteToMove,
+                HalfMoveClock = HalfMoveClock,
+                FullMoveNumber = FullMoveNumber,
+                CastlingRights = CastlingRights,
+                EnPassantTarget = EnPassantTarget != null ? new Position(EnPassantTarget.File, EnPassantTarget.Rank) : null
+            };
+            return clone;
         }
     }
 }
