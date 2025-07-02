@@ -1,6 +1,4 @@
 ﻿using chess_bot_cs.MachineLearning;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 

@@ -1,5 +1,5 @@
-﻿using System.Windows;
-using chess_bot_cs.ChessEngine;
+﻿using chess_bot_cs.ChessEngine;
+using System.Windows;
 
 namespace chess_bot_cs.UI
 {

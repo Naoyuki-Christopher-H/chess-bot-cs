@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace chess_bot_cs.ChessEngine
+﻿namespace chess_bot_cs.ChessEngine
 {
     public class RulesValidator
     {

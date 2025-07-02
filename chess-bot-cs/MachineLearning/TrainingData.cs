@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace chess_bot_cs.MachineLearning
+﻿namespace chess_bot_cs.MachineLearning
 {
     public class TrainingData
     {

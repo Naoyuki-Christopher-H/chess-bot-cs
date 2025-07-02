@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace chess_bot_cs.DataModels
+﻿namespace chess_bot_cs.DataModels
 {
     public class GameHistory
     {

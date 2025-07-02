@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace chess_bot_cs.ChessEngine
+﻿namespace chess_bot_cs.ChessEngine
 {
     public class Game
     {

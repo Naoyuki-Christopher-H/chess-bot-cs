@@ -1,8 +1,8 @@
-﻿using System.Windows;
+﻿using chess_bot_cs.ChessEngine;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using chess_bot_cs.ChessEngine;
 
 namespace chess_bot_cs.UI
 {

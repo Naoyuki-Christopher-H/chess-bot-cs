@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace chess_bot_cs.ChessEngine
+﻿namespace chess_bot_cs.ChessEngine
 {
     public class Board
     {

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using chess_bot_cs.ChessEngine;
+﻿using chess_bot_cs.ChessEngine;
 
 namespace chess_bot_cs.MachineLearning
 {
