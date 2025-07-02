@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace chess_bot_cs.DataModels
+﻿namespace chess_bot_cs.DataModels
 {
-    internal class MoveRecord
+    public class MoveRecord
     {
+        public int MoveNumber { get; set; }
+        public string WhiteMove { get; set; }
+        public string BlackMove { get; set; }
+        public string FenAfterMove { get; set; }
     }
 }
