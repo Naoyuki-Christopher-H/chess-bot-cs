@@ -15,25 +15,37 @@
         {
             return $"{(char)('a' + File)}{Rank + 1}";
         }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Position position &&
+                   File == position.File &&
+                   Rank == position.Rank;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(File, Rank);
+        }
     }
 
     public class Move
     {
         public Position From { get; }
         public Position To { get; }
-        public Piece CapturedPiece { get; set; }
+        public Piece? CapturedPiece { get; set; }
         public PieceType Promotion { get; set; }
 
         public Move(Position from, Position to)
         {
-            From = from;
-            To = to;
+            From = from ?? throw new ArgumentNullException(nameof(from));
+            To = to ?? throw new ArgumentNullException(nameof(to));
             Promotion = PieceType.None;
         }
 
         public override string ToString()
         {
-            return $"{From}-{To}";
+            return $"{From}-{To}{(Promotion != PieceType.None ? "=" + Promotion.ToString()[0] : "")}";
         }
     }
 }

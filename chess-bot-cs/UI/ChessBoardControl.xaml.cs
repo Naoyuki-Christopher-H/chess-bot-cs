@@ -11,7 +11,7 @@ namespace chess_bot_cs.UI
         private const int BoardSize = 8;
         private Rectangle[,] squares = new Rectangle[BoardSize, BoardSize];
         private TextBlock[,] pieceSymbols = new TextBlock[BoardSize, BoardSize];
-        private Board currentBoard;
+        private Board? currentBoard;
 
         public ChessBoardControl()
         {
@@ -20,7 +20,7 @@ namespace chess_bot_cs.UI
 
         public void InitializeBoard(Board board)
         {
-            currentBoard = board;
+            currentBoard = board ?? throw new ArgumentNullException(nameof(board));
             ChessGrid.Children.Clear();
             ChessGrid.ColumnDefinitions.Clear();
             ChessGrid.RowDefinitions.Clear();
@@ -44,7 +44,7 @@ namespace chess_bot_cs.UI
                     square.StrokeThickness = 0.5;
 
                     Grid.SetColumn(square, file);
-                    Grid.SetRow(square, BoardSize - 1 - rank); // Rank 0 at bottom
+                    Grid.SetRow(square, BoardSize - 1 - rank);
 
                     // Create piece symbol
                     var pieceSymbol = new TextBlock();
@@ -87,10 +87,16 @@ namespace chess_bot_cs.UI
             }
         }
 
-        public void HighlightSquare(int file, int rank, bool highlight)
+        public void HighlightSquare(int file, int rank, bool isSelected)
         {
-            squares[file, rank].Stroke = highlight ? Brushes.Red : Brushes.Black;
-            squares[file, rank].StrokeThickness = highlight ? 3 : 0.5;
+            if (file < 0 || file >= BoardSize || rank < 0 || rank >= BoardSize)
+                return;
+
+            squares[file, rank].Stroke = isSelected ? Brushes.Red : Brushes.Black;
+            squares[file, rank].StrokeThickness = isSelected ? 3 : 0.5;
+            squares[file, rank].Fill = (file + rank) % 2 == 0 ?
+                (isSelected ? Brushes.LightYellow : Brushes.White) :
+                (isSelected ? Brushes.LightGoldenrodYellow : Brushes.LightGray);
         }
 
         public void ClearHighlights()
@@ -99,14 +105,15 @@ namespace chess_bot_cs.UI
             {
                 for (int rank = 0; rank < BoardSize; rank++)
                 {
-                    HighlightSquare(file, rank, false);
+                    squares[file, rank].Stroke = Brushes.Black;
+                    squares[file, rank].StrokeThickness = 0.5;
+                    squares[file, rank].Fill = (file + rank) % 2 == 0 ? Brushes.White : Brushes.LightGray;
                 }
             }
         }
 
         private void Square_MouseDown(int file, int rank)
         {
-            // Handle square selection and moves
             var mainWindow = Window.GetWindow(this) as MainWindow;
             if (mainWindow != null)
             {
@@ -116,13 +123,15 @@ namespace chess_bot_cs.UI
 
         private void ChessGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            // Adjust font size based on available space
-            double newSize = e.NewSize.Width / BoardSize * 0.6;
-            foreach (var symbol in pieceSymbols)
+            if (e.NewSize.Width > 0)
             {
-                if (symbol != null)
+                double newSize = e.NewSize.Width / BoardSize * 0.6;
+                foreach (var symbol in pieceSymbols)
                 {
-                    symbol.FontSize = newSize;
+                    if (symbol != null)
+                    {
+                        symbol.FontSize = newSize;
+                    }
                 }
             }
         }

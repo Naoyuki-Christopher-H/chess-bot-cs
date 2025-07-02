@@ -8,14 +8,14 @@ namespace chess_bot_cs.ChessEngine
         public Piece[,] Squares
         {
             get => squares;
-            internal set => squares = value; // Changed to internal setter
+            internal set => squares = value;
         }
 
         public bool WhiteToMove { get; set; }
         public int HalfMoveClock { get; set; }
         public int FullMoveNumber { get; set; }
         public string CastlingRights { get; set; }
-        public Position EnPassantTarget { get; set; }
+        public Position? EnPassantTarget { get; set; } // Made nullable
 
         public Board()
         {
@@ -29,6 +29,9 @@ namespace chess_bot_cs.ChessEngine
 
         public void InitializeStandardSetup()
         {
+            // Clear the board
+            squares = new Piece[8, 8];
+
             // Place pawns
             for (int file = 0; file < 8; file++)
             {
@@ -63,9 +66,9 @@ namespace chess_bot_cs.ChessEngine
             squares[4, 7] = new Piece(PieceType.King, true);
         }
 
-        public Piece GetPieceAt(Position position)
+        public Piece? GetPieceAt(Position position)
         {
-            if (position == null || position.File < 0 || position.File > 7 || position.Rank < 0 || position.Rank > 7)
+            if (position.File < 0 || position.File > 7 || position.Rank < 0 || position.Rank > 7)
                 return null;
 
             return squares[position.File, position.Rank];
@@ -73,18 +76,16 @@ namespace chess_bot_cs.ChessEngine
 
         public void MakeMove(Move move)
         {
-            if (move == null || move.From == null || move.To == null)
-                return;
+            if (move == null) return;
 
             var piece = GetPieceAt(move.From);
-            if (piece == null)
-                return;
+            if (piece == null) return;
 
             // Handle capture
             move.CapturedPiece = GetPieceAt(move.To);
 
             // Move the piece
-            squares[move.From.File, move.From.Rank] = null;
+            squares[move.From.File, move.From.Rank] = null!;
             squares[move.To.File, move.To.Rank] = piece;
 
             // Handle special cases
@@ -98,11 +99,11 @@ namespace chess_bot_cs.ChessEngine
                 {
                     EnPassantTarget = new Position(move.From.File, (move.From.Rank + move.To.Rank) / 2);
                 }
-                else if (move.To.Equals(EnPassantTarget))
+                else if (EnPassantTarget != null && move.To.Equals(EnPassantTarget))
                 {
                     // Capture the en passant pawn
                     int capturedPawnRank = piece.IsWhite ? move.To.Rank + 1 : move.To.Rank - 1;
-                    squares[move.To.File, capturedPawnRank] = null;
+                    squares[move.To.File, capturedPawnRank] = null!;
                     move.CapturedPiece = new Piece(PieceType.Pawn, !piece.IsWhite);
                 }
 
@@ -135,8 +136,8 @@ namespace chess_bot_cs.ChessEngine
 
                 // Move the rook
                 var rook = squares[rookFromFile, rank];
-                squares[rookFromFile, rank] = null;
-                squares[rookToFile, rank] = rook;
+                squares[rookFromFile, rank] = null!;
+                squares[rookToFile, rank] = rook!;
             }
 
             // Update castling rights if king or rook moves

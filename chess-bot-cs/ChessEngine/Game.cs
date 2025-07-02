@@ -10,8 +10,8 @@ namespace chess_bot_cs.ChessEngine
         public List<Move> MoveHistory { get; private set; }
         public GameState State { get; private set; }
 
-        public event Action<Move> OnMoveMade;
-        public event Action<GameState> OnGameStateChanged;
+        public event Action<Move>? OnMoveMade;
+        public event Action<GameState>? OnGameStateChanged;
 
         public Game()
         {
@@ -20,11 +20,14 @@ namespace chess_bot_cs.ChessEngine
             Validator = new RulesValidator(Board);
             MoveHistory = new List<Move>();
             State = GameState.InProgress;
+            OnMoveMade = null;
+            OnGameStateChanged = null;
         }
 
         public bool MakeMove(Move move)
         {
             if (State != GameState.InProgress) return false;
+            if (move == null) return false;
 
             if (Validator.IsMoveLegal(move))
             {
@@ -33,7 +36,6 @@ namespace chess_bot_cs.ChessEngine
 
                 OnMoveMade?.Invoke(move);
 
-                // Check game state after move
                 UpdateGameState();
 
                 return true;
@@ -54,7 +56,6 @@ namespace chess_bot_cs.ChessEngine
                 State = GameState.Draw;
                 OnGameStateChanged?.Invoke(State);
             }
-            // Add other draw conditions (50-move rule, repetition, insufficient material)
         }
 
         public List<Move> GetLegalMoves(Position from)
