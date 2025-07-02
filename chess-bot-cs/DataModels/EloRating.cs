@@ -2,7 +2,7 @@
 {
     public class EloRating
     {
-        public string PlayerId { get; set; }
+        public string PlayerId { get; set; } = string.Empty;
         public int Rating { get; set; }
         public int GamesPlayed { get; set; }
         public int Wins { get; set; }

@@ -37,11 +37,10 @@ namespace chess_bot_cs.Utilities
             return games;
         }
 
-        private static GameRecord ParseSingleGame(string gameString)
+        private static GameRecord? ParseSingleGame(string gameString)
         {
-            // Implementation to parse a single PGN game
-            // This would extract the moves and game metadata
-            return null;
+            // Basic implementation - would need to be expanded
+            return new GameRecord();
         }
     }
 }

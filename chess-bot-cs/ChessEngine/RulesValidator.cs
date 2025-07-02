@@ -1,46 +1,32 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace chess_bot_cs.ChessEngine
 {
     public class RulesValidator
     {
-        private Board board;
+        private readonly Board board;
 
         public RulesValidator(Board board)
         {
-            this.board = board;
+            this.board = board ?? throw new ArgumentNullException(nameof(board));
         }
 
         public bool IsMoveLegal(Move move)
         {
-            // Check basic move validity
-            if (move.From == null || move.To == null)
+            if (move == null || move.From == null || move.To == null)
                 return false;
 
             var piece = board.GetPieceAt(move.From);
             if (piece == null || piece.IsWhite != board.WhiteToMove)
                 return false;
 
-            // Get all legal moves for this piece
             var legalMoves = GetLegalMovesForPiece(move.From);
-
-            // Check if the proposed move is in the list of legal moves
-            foreach (var legalMove in legalMoves)
-            {
-                if (legalMove.To.File == move.To.File && legalMove.To.Rank == move.To.Rank)
-                {
-                    // Additional check for promotion
-                    if (piece.Type == PieceType.Pawn &&
-                        (move.To.Rank == 0 || move.To.Rank == 7) &&
-                        move.Promotion == PieceType.None)
-                    {
-                        return false; // Promotion required but not specified
-                    }
-                    return true;
-                }
-            }
-
-            return false;
+            return legalMoves.Any(m => m.To.Equals(move.To) &&
+                (piece.Type != PieceType.Pawn ||
+                 (move.To.Rank != 0 && move.To.Rank != 7) ||
+                 move.Promotion != PieceType.None));
         }
 
         public List<Move> GetLegalMovesForPiece(Position position)
@@ -49,7 +35,6 @@ namespace chess_bot_cs.ChessEngine
             if (piece == null) return new List<Move>();
 
             var moves = new List<Move>();
-
             switch (piece.Type)
             {
                 case PieceType.Pawn:
@@ -72,34 +57,25 @@ namespace chess_bot_cs.ChessEngine
                     break;
             }
 
-            // Filter out moves that would leave king in check
             return FilterMovesThatLeaveKingInCheck(moves, piece.IsWhite);
         }
 
         private List<Move> FilterMovesThatLeaveKingInCheck(List<Move> moves, bool isWhite)
         {
             var validMoves = new List<Move>();
+            var originalBoard = board.Clone();
 
             foreach (var move in moves)
             {
-                // Simulate the move
-                var originalBoard = board.Squares.Clone() as Piece[,];
-                var originalEnPassant = board.EnPassantTarget;
-                var originalCastling = board.CastlingRights;
-
                 board.MakeMove(move);
-
-                // Check if king is still in check
                 if (!IsKingInCheck(isWhite))
                 {
                     validMoves.Add(move);
                 }
-
-                // Undo the move
-                board.Squares = originalBoard;
-                board.EnPassantTarget = originalEnPassant;
-                board.CastlingRights = originalCastling;
-                board.WhiteToMove = !board.WhiteToMove;
+                board.Squares = originalBoard.Squares;
+                board.WhiteToMove = originalBoard.WhiteToMove;
+                board.CastlingRights = originalBoard.CastlingRights;
+                board.EnPassantTarget = originalBoard.EnPassantTarget;
             }
 
             return validMoves;
@@ -137,15 +113,14 @@ namespace chess_bot_cs.ChessEngine
 
                     if (targetPiece != null && targetPiece.IsWhite != isWhite)
                     {
-                        moves.Add(new Move(position, capturePos) { CapturedPiece = targetPiece });
+                        moves.Add(new Move(position, capturePos));
                     }
 
                     // En passant
                     if (board.EnPassantTarget != null &&
-                        capturePos.File == board.EnPassantTarget.File &&
-                        capturePos.Rank == board.EnPassantTarget.Rank)
+                        capturePos.Equals(board.EnPassantTarget))
                     {
-                        moves.Add(new Move(position, capturePos) { CapturedPiece = new Piece(PieceType.Pawn, !isWhite) });
+                        moves.Add(new Move(position, capturePos));
                     }
                 }
             }
@@ -171,28 +146,12 @@ namespace chess_bot_cs.ChessEngine
 
                             if (targetPiece == null || targetPiece.IsWhite != isWhite)
                             {
-                                moves.Add(new Move(position, targetPos) { CapturedPiece = targetPiece });
+                                moves.Add(new Move(position, targetPos));
                             }
                         }
                     }
                 }
             }
-        }
-
-        private void GetBishopMoves(Position position, bool isWhite, List<Move> moves)
-        {
-            GetSlidingMoves(position, isWhite, moves, new[] { (-1, -1), (-1, 1), (1, -1), (1, 1) });
-        }
-
-        private void GetRookMoves(Position position, bool isWhite, List<Move> moves)
-        {
-            GetSlidingMoves(position, isWhite, moves, new[] { (-1, 0), (1, 0), (0, -1), (0, 1) });
-        }
-
-        private void GetQueenMoves(Position position, bool isWhite, List<Move> moves)
-        {
-            GetSlidingMoves(position, isWhite, moves,
-                new[] { (-1, -1), (-1, 1), (1, -1), (1, 1), (-1, 0), (1, 0), (0, -1), (0, 1) });
         }
 
         private void GetSlidingMoves(Position position, bool isWhite, List<Move> moves, (int, int)[] directions)
@@ -218,12 +177,28 @@ namespace chess_bot_cs.ChessEngine
                     {
                         if (targetPiece.IsWhite != isWhite)
                         {
-                            moves.Add(new Move(position, targetPos) { CapturedPiece = targetPiece });
+                            moves.Add(new Move(position, targetPos));
                         }
                         break;
                     }
                 }
             }
+        }
+
+        private void GetBishopMoves(Position position, bool isWhite, List<Move> moves)
+        {
+            GetSlidingMoves(position, isWhite, moves, new[] { (-1, -1), (-1, 1), (1, -1), (1, 1) });
+        }
+
+        private void GetRookMoves(Position position, bool isWhite, List<Move> moves)
+        {
+            GetSlidingMoves(position, isWhite, moves, new[] { (-1, 0), (1, 0), (0, -1), (0, 1) });
+        }
+
+        private void GetQueenMoves(Position position, bool isWhite, List<Move> moves)
+        {
+            GetSlidingMoves(position, isWhite, moves,
+                new[] { (-1, -1), (-1, 1), (1, -1), (1, 1), (-1, 0), (1, 0), (0, -1), (0, 1) });
         }
 
         private void GetKingMoves(Position position, bool isWhite, List<Move> moves)
@@ -245,7 +220,7 @@ namespace chess_bot_cs.ChessEngine
 
                         if (targetPiece == null || targetPiece.IsWhite != isWhite)
                         {
-                            moves.Add(new Move(position, targetPos) { CapturedPiece = targetPiece });
+                            moves.Add(new Move(position, targetPos));
                         }
                     }
                 }
@@ -293,7 +268,6 @@ namespace chess_bot_cs.ChessEngine
         {
             if (!IsKingInCheck(isWhite)) return false;
 
-            // Check if any legal move exists for the current player
             for (int file = 0; file < 8; file++)
             {
                 for (int rank = 0; rank < 8; rank++)
@@ -303,8 +277,8 @@ namespace chess_bot_cs.ChessEngine
 
                     if (piece != null && piece.IsWhite == isWhite)
                     {
-                        var moves = GetLegalMovesForPiece(pos);
-                        if (moves.Count > 0) return false;
+                        if (GetLegalMovesForPiece(pos).Count > 0)
+                            return false;
                     }
                 }
             }
@@ -316,7 +290,6 @@ namespace chess_bot_cs.ChessEngine
         {
             if (IsKingInCheck(isWhite)) return false;
 
-            // Check if any legal move exists for the current player
             for (int file = 0; file < 8; file++)
             {
                 for (int rank = 0; rank < 8; rank++)
@@ -326,8 +299,8 @@ namespace chess_bot_cs.ChessEngine
 
                     if (piece != null && piece.IsWhite == isWhite)
                     {
-                        var moves = GetLegalMovesForPiece(pos);
-                        if (moves.Count > 0) return false;
+                        if (GetLegalMovesForPiece(pos).Count > 0)
+                            return false;
                     }
                 }
             }
@@ -348,12 +321,11 @@ namespace chess_bot_cs.ChessEngine
                     }
                 }
             }
-            return null; // Should never happen in a valid game
+            throw new InvalidOperationException("King not found on board");
         }
 
         private bool IsSquareUnderAttack(Position square, bool byWhite)
         {
-            // Check if any opponent piece can attack this square
             for (int file = 0; file < 8; file++)
             {
                 for (int rank = 0; rank < 8; rank++)
@@ -364,13 +336,8 @@ namespace chess_bot_cs.ChessEngine
                     if (piece != null && piece.IsWhite == byWhite)
                     {
                         var moves = GetPseudoLegalMoves(pos);
-                        foreach (var move in moves)
-                        {
-                            if (move.To.File == square.File && move.To.Rank == square.Rank)
-                            {
-                                return true;
-                            }
-                        }
+                        if (moves.Any(m => m.To.Equals(square)))
+                            return true;
                     }
                 }
             }
@@ -380,12 +347,10 @@ namespace chess_bot_cs.ChessEngine
 
         private List<Move> GetPseudoLegalMoves(Position position)
         {
-            // Similar to GetLegalMovesForPiece but without checking if king would be in check
             var piece = board.GetPieceAt(position);
             if (piece == null) return new List<Move>();
 
             var moves = new List<Move>();
-
             switch (piece.Type)
             {
                 case PieceType.Pawn:
