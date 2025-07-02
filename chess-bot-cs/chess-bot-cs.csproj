@@ -9,12 +9,4 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="ChessEngine\" />
-    <Folder Include="MachineLearning\" />
-    <Folder Include="DataModels\" />
-    <Folder Include="Utilities\" />
-    <Folder Include="UI\" />
-  </ItemGroup>
-
 </Project>
