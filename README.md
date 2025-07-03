@@ -83,7 +83,7 @@ chess-bot-cs/
 ```
 
 ## LICENSE  
-**License Name:** MIT License  
+- **License Name:** MIT License  
 - **Role:** Permits modification and redistribution with attribution  
 - **Full License:** [LICENSE](LICENSE)  
 
