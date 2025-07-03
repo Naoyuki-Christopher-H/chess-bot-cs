@@ -18,12 +18,10 @@ This project implements a chess bot in C# that connects with Stockfish engine to
 - Move validation following standard chess rules  
 - Configurable engine difficulty levels  
 - Real-time position evaluation  
-
 - **Date of creation:** 2025-07  
 - **Badges:**  
-  ![C#](https://img.shields.io/badge/C%23-239120?logo=c-sharp&logoColor=white)  
-  ![.NET](https://img.shields.io/badge/.NET-512BD4?logo=dotnet&logoColor=white)  
-
+  - ![C#](https://img.shields.io/badge/C%23-239120?logo=c-sharp&logoColor=white)  
+  - ![.NET](https://img.shields.io/badge/.NET-512BD4?logo=dotnet&logoColor=white)  
 - **Technical:** Requires .NET 6.0 and Stockfish 16+  
 - **Laboratory:** Tested on Windows 10/11 x64 systems  
 
@@ -31,10 +29,9 @@ This project implements a chess bot in C# that connects with Stockfish engine to
 **GitHub Repo:** [chess-bot-cs](https://github.com/Naoyuki-Christopher-H/chess-bot-cs)  
 
 1. **Clone** the repository  
-2. **Place** Stockfish binary in `/engines` folder  
-3. **Run** using:  
+2. **Run** using:  
    ```bash
-   dotnet run --project ChessBot
+   dotnet run --project chess-bot-cs
    ```
 
 ### Key Features  
