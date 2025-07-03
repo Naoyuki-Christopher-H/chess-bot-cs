@@ -1,4 +1,4 @@
-# Chess Bot CS: A C# implementation that integrates Stockfish engine for chess analysis and autonomous gameplay
+# Chess Bot CS
 
 ## BOOKMARKS  
 - [OBJECTIVE](#objective)  
