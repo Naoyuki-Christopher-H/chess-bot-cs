@@ -67,7 +67,6 @@ chess-bot-cs/
 │   ├── PgnParser.cs
 │   └── EloCalculator.cs
 └── App.config
-
 ```
 
 ## LICENSE  
